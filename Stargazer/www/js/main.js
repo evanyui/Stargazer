@@ -14,7 +14,6 @@ var earth;
 var labelScore;
 var score;
 var music;
-var difficulty = 1;
 var anim;
 var x, y;
 var pauseMsg;
@@ -118,29 +117,6 @@ var mainState = {
         score++;
         labelScore.text = "Score: " + Math.floor(score/100);
 
-        // Difficulty Increase
-        if(score>30000) {
-          difficulty = 2.0;
-        }
-        if(score>20000) {
-          difficulty = 1.5;
-        }
-        if(score>15000) {
-          difficulty = 1.4;
-        }
-        if(score>10000) {
-          spawn = 2000;
-          difficulty = 1.3;
-        }
-        if(score>8000) {
-          spawn = 4000;
-          difficulty = 1.2;
-        }
-        if(score>5000) {
-          spawn = 6000;
-          difficulty = 1.1;
-        }
-
         //  Scroll the background
         space.tilePosition.y += GAME_SPEED/2;
         ship.body.y += GAME_SPEED;
@@ -172,12 +148,12 @@ var mainState = {
             planets.remove(p);
           }
           var speed;
-          if (distanceBetween(ship,p) < 100*difficulty) {
-            speed = 160*difficulty;
-          } else if (distanceBetween(ship,p) < 200*difficulty) {
-            speed = 120*difficulty;
-          } else if (distanceBetween(ship,p) < 300*difficulty) {
-            speed = 80*difficulty;
+          if (distanceBetween(ship,p) < 100) {
+            speed = 70;
+          } else if (distanceBetween(ship,p) < 200) {
+            speed = 60;
+          } else if (distanceBetween(ship,p) < 300) {
+            speed = 50;
           }
           accelerateToObject(ship,p,speed);
         }, this)
@@ -377,8 +353,8 @@ function accelerateToObject(obj1, obj2, speed) {
     // turn left
     obj1.body.angle-= TURN_FACTOR;
   }
-  obj1.body.force.x = Math.cos(rad) * speed;    // accelerateToObject
-  obj1.body.force.y = Math.sin(rad) * speed;
+  obj1.body.force.x += Math.cos(rad) * speed;    // accelerateToObject
+  obj1.body.force.y += Math.sin(rad) * speed;
 }
 
 function loadData() {
