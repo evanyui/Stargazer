@@ -1,5 +1,10 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.phonegap.helloworld" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:gap="http://phonegap.com/ns/1.0">
+<widget xmlns = "http://www.w3.org/ns/widgets"
+    xmlns:gap = "http://phonegap.com/ns/1.0"
+    xmlns:android = "http://schemas.android.com/apk/res/android"
+    id        = "com.evanyui.stargazer"
+    versionCode="100"
+    version   = "1.0.0">
     <name>Stargazer</name>
     <description>
         Phaser engined phonegap game.
@@ -8,10 +13,16 @@
         Evanyui
     </author>
     <content src="index.html" />
+    <gap:config-file platform="android" parent="/manifest/application">
+    <activity android:launchMode="singleTop" />
+    </gap:config-file>
+    <preference name="phonegap-version" value="cli-5.1.1" />
+    <preference name="KeepRunning" value="false"/>
     <preference name="DisallowOverscroll" value="true" />
     <preference name="android-minSdkVersion" value="14" />
     <preference name="orientation" value="portrait" />
     <preference name="fullscreen" value="true" />
+    <preference name="exit-on-suspend" value="true" />
     <plugin name="cordova-plugin-battery-status" source="npm" spec="~1.1.1" />
     <plugin name="cordova-plugin-camera" source="npm" spec="~2.1.1" />
     <plugin name="cordova-plugin-media-capture" source="npm" spec="~1.2.0" />

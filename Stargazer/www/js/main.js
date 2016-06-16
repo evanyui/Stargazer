@@ -1,22 +1,25 @@
 // Constants
 var TURN_FACTOR = 0.2;
-var BOOST = 100;
-var GAME_SPEED = 1;
+var BOOST = 200;
+var GAME_SPEED = 2.0;
+var SPAWN = 6500; // Suggest: between 6000-7000
+
 // Globals
-var spawn = 8000;
+var cursors;
 var space;
 var planets;
 var planet;
 var ship;
+var x, y;
 var v = 0;
-var cursors;
 var earth;
 var labelScore;
 var score;
 var music;
 var anim;
-var x, y;
 var pauseMsg;
+var touchLabel;
+var target;
 
 // Create our 'main' state that will contain the game
 var mainState = {
@@ -34,7 +37,7 @@ var mainState = {
         game.load.image('planet5', 'assets/planet5.png');
         game.load.image('planet6', 'assets/planet6.png');
         // Load sprite sheets
-        game.load.spritesheet('sprites', 'assets/sprites.png', 450, 400, 4);
+        game.load.spritesheet('sprites', 'assets/sprites.png', 40, 28, 8);
     },
 
     create: function() {
@@ -52,26 +55,32 @@ var mainState = {
         space = game.add.tileSprite(0, 0, window.screen.width, window.screen.height, 'space');
 
         // Set game boundary
-        game.world.setBounds(0, -100, window.screen.width, window.screen.height+100);
+        game.world.setBounds(0, -50, window.screen.width, window.screen.height+100);
 
         // Create an empty group
         planets = game.add.group();
 
         // Ship setup
-        // Display the ship at center of screen
-        ship = game.add.sprite(game.world.centerX, game.world.centerY, 'sprites');
+        // Display the ship at center bottom of screen
+        ship = game.add.sprite(game.world.centerX, game.world.centerY+game.world.centerY/4, 'sprites');
         // Set scale of ship
-        ship.scale.setTo(0.2, 0.2);
+        // ship.scale.setTo(0.2, 0.2);
         // Add physics to the ship
         game.physics.p2.enable(ship, true);
         // Move the anchor to the left and downward
         ship.anchor.setTo(0.5, 0.5);
-        ship.body.clearShapes();
         ship.body.angle = -90;
+        ship.body.clearShapes();
+        // Initialize
+        ship.body.force.x = 0;
+        ship.body.force.y = 0;
+        v = 0;
+        // Load animation
         anim = ship.animations.add('fly');
+        anim.frame = 7;
 
-        // Add planets every 10 seconds
-        this.timer = game.time.events.loop(spawn, this.createPlanet, this);
+        // Add planets every 6~7 seconds
+        this.timer = game.time.events.loop(SPAWN, this.createPlanet, this);
 
         // Call the 'boost' function when the spacekey is hit
         var spaceKey = game.input.keyboard.addKey(
@@ -79,21 +88,21 @@ var mainState = {
         cursors = game.input.keyboard.createCursorKeys();
         spaceKey.onDown.add(this.boost, this);
         spaceKey.onUp.add(this.brake, this);
-        this.game.input.onDown.add(this.boost, this);
-        this.game.input.onUp.add(this.brake, this);
+        game.input.onDown.add(this.boost, this);
+        game.input.onUp.add(this.brake, this);
 
         // Add sounds
         // this.jumpSound = game.add.audio('jump');
 
         // Create score label
         score = 0;
-        labelScore = game.add.text(20, 20, "Score: 0",
-            { font: "20px Verdana", fill: "rgba(255,255,255,0.8)" });
-        labelScore.setShadow(0, 2, 'rgba(0,0,0,1.0)', 2);
+        labelScore = game.add.text(window.screen.width/2, 50, "0",
+            { font: "30px Arial", fill: "rgba(255,255,255,1.0)" });
+        labelScore.anchor.set(0.5);
 
         // Pause Game mechanism
         var pauseLabel = game.add.text( window.screen.width-40, 20, '| |',
-            { font: '20px Verdana', fill: 'rgba(255,255,255,0.8)',  });
+            { font: '20px Arial', fill: 'rgba(255,255,255,0.8)',  });
         pauseLabel.fontWeight = 'bold';
         pauseLabel.inputEnabled = true;
         // pauseLabel.strokeThickness = 4;
@@ -101,13 +110,19 @@ var mainState = {
         pauseLabel.events.onInputUp.add(function () {
           // Pause
           game.paused = true;
+          music.pause();
+          // Message
           pauseMsg = game.add.text( window.screen.width/2, window.screen.height/2, 'Paused',
-              { font: '30px Verdana', fill: 'rgba(255,255,255,1.0)',  });
+              { font: '30px Verdana', fill: 'rgba(255,255,255,1.0)' });
           pauseMsg.setShadow(0, 4, 'rgba(0,0,0,1.0)', 2);
           pauseMsg.anchor.set(0.5);
+
+          touchLabel = game.add.text(window.screen.width/2,window.screen.height-100,'touch to resume',
+                                    {font:'20px Verdana', fill:'rgba(255,255,255,0.2)',
+                                    boundsAlignH:'center', boundsAlignV:'middle'});
+          touchLabel.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
+          touchLabel.anchor.set(0.5);
         });
-
-
     },
 
     update: function() {
@@ -115,11 +130,11 @@ var mainState = {
         // It contains the game's logic
         // Keep score
         score++;
-        labelScore.text = "Score: " + Math.floor(score/100);
+        labelScore.text = Math.floor(score/100);
 
         //  Scroll the background
         space.tilePosition.y += GAME_SPEED/2;
-        ship.body.y += GAME_SPEED;
+        // ship.body.y += GAME_SPEED;
 
         // If the ship is out of the screen, restart
         if (ship.y < 0 || ship.y > window.screen.height ||
@@ -136,28 +151,33 @@ var mainState = {
         //     ship.body.angle+=TURN_FACTOR*10;
         // }
         // For touch controls
-        var rad = Math.atan2(game.input.y - ship.body.y, game.input.x - ship.body.x);
+        // var rad = Math.atan2(game.input.y - ship.body.y, game.input.x - ship.body.x);
         //decides turn left or right
-        var angle = game.math.radToDeg(rad)
-        ship.body.angle = angle;
+        // var angle = game.math.radToDeg(rad)
+        // ship.body.angle = angle;
 
         // Net gravitational force
         planets.forEach(function(p) {
           p.body.y += GAME_SPEED;
-          if(p.body.y < -100 || p.body.y > window.screen.height+100) {
+          if(p.body.y < -50 || p.body.y > window.screen.height+50) {
             planets.remove(p);
           }
           var speed;
           if (distanceBetween(ship,p) < 100) {
-            speed = 70;
+            speed = BOOST-100;
           } else if (distanceBetween(ship,p) < 200) {
-            speed = 60;
+            speed = BOOST-140;
           } else if (distanceBetween(ship,p) < 300) {
-            speed = 50;
+            speed = BOOST-200;
           }
           accelerateToObject(ship,p,speed);
-        }, this)
+        }, this);
 
+        // Update ship direction to target
+        if(planets.length>0) {
+          var angle = Math.atan2(target.y - ship.y, target.x - ship.x);
+          game.add.tween(ship.body).to({rotation: angle}, 200).start();
+        }
         // Move ship according to new direction affected by gravity pull
         Math.radians = function(degrees) {
           return degrees * Math.PI / 180;
@@ -168,32 +188,30 @@ var mainState = {
 
     // Boost ship
     boost: function() {
-
         // If game is paused, resume game
         if(game.paused) {
           game.paused = false;
+          music.resume();
           pauseMsg.destroy();
+          touchLabel.destroy();
         }
-
-        // When ship is dead, it doesn't work
-        if (ship.alive == false)
-          return;
-
-        v = BOOST;
-        anim.play(null, true);
+        else {
+          v = BOOST;
+          anim.play(null, true);
+        }
     },
 
     // Brake the ship
     brake: function() {
         v = 0;
         anim.stop(null, true);
-        anim.frame = 0;
+        anim.frame = 7;
     },
 
     // Restart the game
     restartGame: function() {
         // Start the 'main' state, which restarts the game
-        planets.destroy();
+        planets.removeAll();
         loadData();
         game.state.start('finish');
     },
@@ -202,10 +220,10 @@ var mainState = {
     createPlanet: function() {
         // Planet setup
         var y = -100;
-        var x = Math.floor(Math.random() * window.screen.width);
+        var x = Math.floor(Math.random() * (window.screen.width/4)+(3*window.screen.width/8));
         var style = Math.floor(Math.random() * 6) + 1;
         var p = game.add.sprite(x, y, 'planet'+style);
-        p.scale.setTo(0.2, 0.2);
+        // p.scale.setTo(0.2, 0.2);
         game.physics.p2.enable(p, true);
         p.body.static = true;
         p.body.clearShapes();
@@ -214,11 +232,16 @@ var mainState = {
         p.outOfBoundsKill = true;
         // Push into groups
         planets.add(p);
+
+        // Update target for autoguidance
+        target = p;
     },
 };
 
 var menuState = {
   preload: function() {
+    // Load images
+    game.load.image('ship', 'assets/ship.png');
     game.load.image('back', 'assets/space.png');
 
     // Load sounds
@@ -236,25 +259,29 @@ var menuState = {
     music.loop = true;
     music.play();
 
+    // Ship setup
+    // Display the ship at center bottom of screen
+
+
     this.back = game.add.tileSprite(0, 0, game.width, game.height, 'back');
-    var nameLabel = game.add.text(window.screen.width/2,150,'Stargazer',{font:'50px Verdana', fill:'rgba(255,255,255,0.8)',
+    var nameLabel = game.add.text(window.screen.width/2,150,'Stargazer',{font:'50px Verdana', fill:'rgba(255,255,255,1.0)',
                               boundsAlignH:'center', boundsAlignV:'middle'});
-    nameLabel.setShadow(0, 5, 'rgba(0,0,0,1.0)', 5);
+    nameLabel.setShadow(0, 5, 'rgba(0,0,0,0.5)', 5);
     nameLabel.anchor.set(0.5);
     var highScore = game.add.text(window.screen.width/2, window.screen.height-150, "High Score: " + Math.floor(localStorage.getItem('highscore')/100),
-                    { font: "24px Verdana", fill: "rgba(255,255,255,1.0)",
+                    { font: "22px Verdana", fill: "rgba(255,255,255,1.0)",
                       boundsAlignH:'center', boundsAlignV:'middle' });
-    highScore.setShadow(0, 2, 'rgba(0,0,0,1.0)', 5);
+    highScore.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
     highScore.anchor.set(0.5);
     var tabLabel = game.add.text(window.screen.width/2,window.screen.height-100,'touch to start',
                               {font:'20px Verdana', fill:'rgba(255,255,255,0.2)',
                               boundsAlignH:'center', boundsAlignV:'middle'});
-    tabLabel.setShadow(0, 2, 'rgba(0,0,0,1.0)', 5);
+    tabLabel.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
     tabLabel.anchor.set(0.5);
     var quoteLabel = game.add.text(window.screen.width/2,window.screen.height/2,"'Mankind was born on Earth. \n\t\t\t\t\tIt was never meant to die here.'\n\t\t\t\t\t\t\t\t\t\t - Interstellar",
-                              {font:'16px Times New Roman', fill:'rgba(255,255,255,0.6)',
+                              {font:'16px Times New Roman', fill:'rgba(255,255,255,0.5)',
                               boundsAlignH:'center', boundsAlignV:'middle'});
-    quoteLabel.setShadow(0, 2, 'rgba(0,0,0,1.0)', 5);
+    quoteLabel.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
     quoteLabel.anchor.set(0.5);
 
 
@@ -262,6 +289,10 @@ var menuState = {
                     Phaser.Keyboard.SPACEBAR);
     spaceKey.onDown.addOnce(this.start, this);
     this.game.input.onDown.add(this.start, this);
+
+    var display = game.add.image(game.world.centerX, game.world.centerY+game.world.centerY/4, 'ship');
+    display.anchor.setTo(0.5,0.5);
+    display.angle = -90;
   },
 
   update: function() {
@@ -296,21 +327,26 @@ var finishState = {
                        "'Mankind was born on Earth. \n It was never meant to die here. \n The end of Earth will not be the end of us. \n Go further. \n Mankind's next step will be our greatest.'"];
     var chosen = Math.floor(Math.random()*stringArray.length);
     var strings = stringArray[chosen]+"\n\t\t\t\t\t\t\t\t\t\t - Interstellar";
-    var quote = game.add.text(window.screen.width/2,window.screen.height/2-150,strings,{font:'16px Times New Roman', fill:'rgba(255,255,255,0.6)',
+    var quote = game.add.text(window.screen.width/2,window.screen.height/2-150,strings,{font:'16px Times New Roman', fill:'rgba(255,255,255,0.5)',
                               boundsAlignH:'center', boundsAlignV:'middle'});
-    quote.setShadow(0, 2, 'rgba(0,0,0,1.0)', 5);
+    quote.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
     quote.anchor.set(0.5);
-    var currentScore = game.add.text(window.screen.width/2, window.screen.height/2+50, "Score: " + Math.floor(score/100),
+    var currentScore = game.add.text(window.screen.width/2, window.screen.height/2+50, "Current Score: " + Math.floor(score/100),
                     { font: "22px Verdana", fill: "rgba(255,255,255,1.0)",
                       boundsAlignH:'center', boundsAlignV:'middle' });
+    currentScore.fontWeight = 'bold';
     currentScore.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
     currentScore.anchor.set(0.5);
-    var highScore = game.add.text(window.screen.width/2, window.screen.height/2+150, "High Score: " + Math.floor(localStorage.getItem('highscore')/100),
+    var highScore = game.add.text(window.screen.width/2, window.screen.height/2+100, "High Score: " + Math.floor(localStorage.getItem('highscore')/100),
                     { font: "22px Verdana", fill: "rgba(255,255,255,1.0)",
                       boundsAlignH:'center', boundsAlignV:'middle' });
     highScore.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
     highScore.anchor.set(0.5);
-
+    var tabLabel = game.add.text(window.screen.width/2,window.screen.height-100,'touch to start',
+                              {font:'20px Verdana', fill:'rgba(255,255,255,0.2)',
+                              boundsAlignH:'center', boundsAlignV:'middle'});
+    tabLabel.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
+    tabLabel.anchor.set(0.5);
 
     var spaceKey = game.input.keyboard.addKey(
                     Phaser.Keyboard.SPACEBAR);
@@ -337,24 +373,30 @@ function distanceBetween(spriteA,spriteB) {
 }
 
 function accelerateToObject(obj1, obj2, speed) {
-  if (typeof speed === 'undefined') { speed = 10; }
-  var rad = Math.atan2(obj2.y - obj1.y, obj2.x - obj1.x);
-  //decides turn left or right
-  var angle = game.math.radToDeg(rad)<0 ? (360-game.math.radToDeg(rad)) : game.math.radToDeg(rad);
-  var direc = obj1.body.angle<0 ? (360-obj1.body.angle) : obj1.body.angle;
-  var diff = Math.abs(direc - angle);
-  if(diff<0) {
-    360 - diff;
-  }
-  if(diff > 180) {
-    // turn right
-    obj1.body.angle+= TURN_FACTOR;
-  } else if(diff < 180) {
-    // turn left
-    obj1.body.angle-= TURN_FACTOR;
-  }
-  obj1.body.force.x += Math.cos(rad) * speed;    // accelerateToObject
-  obj1.body.force.y += Math.sin(rad) * speed;
+  // if (typeof speed === 'undefined') { speed = 10; }
+  // var rad = Math.atan2(obj2.y - obj1.y, obj2.x - obj1.x);
+  // //decides turn left or right
+  // var angle = game.math.radToDeg(rad)<=0 ? (360-game.math.radToDeg(rad)) : game.math.radToDeg(rad);
+  // var direc = obj1.body.angle<=0 ? (360-obj1.body.angle) : obj1.body.angle;
+  // var diff = Math.abs(direc - angle);
+  // if(diff<=0) {
+  //   360 - diff;
+  // }
+  // if(diff >= 180) {
+  //   // turn right
+  //   obj1.body.angle+= TURN_FACTOR;
+  // } else if(diff <= 180) {
+  //   // turn left
+  //   obj1.body.angle-= TURN_FACTOR;
+  // }
+  // obj1.body.force.x += Math.cos(rad) * speed;    // accelerateToObject
+  // obj1.body.force.y += Math.sin(rad) * speed;
+  if (typeof speed === 'undefined') { speed = 20; }
+  var angle = Math.atan2(obj2.y - obj1.y, obj2.x - obj1.x);
+  // obj1.body.rotation = angle;  // Autoguide system
+  // game.add.tween(obj1.body).to({rotation: angle}, 80).start();
+  obj1.body.force.x += Math.cos(angle) * speed;
+  obj1.body.force.y += Math.sin(angle) * speed;
 }
 
 function loadData() {
