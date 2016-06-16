@@ -5,21 +5,19 @@ var GAME_SPEED = 2.0;
 var SPAWN = 6500; // Suggest: between 6000-7000
 
 // Globals
+var music;
 var cursors;
 var space;
 var planets;
-var planet;
 var ship;
-var x, y;
 var v = 0;
-var earth;
+var x, y;
+var anim;
 var labelScore;
 var score;
-var music;
-var anim;
 var pauseMsg;
-var touchLabel;
 var target;
+var touchLabel;
 
 // Create our 'main' state that will contain the game
 var mainState = {
@@ -55,14 +53,14 @@ var mainState = {
         space = game.add.tileSprite(0, 0, window.screen.width, window.screen.height, 'space');
 
         // Set game boundary
-        game.world.setBounds(0, -50, window.screen.width, window.screen.height+100);
+        game.world.setBounds(0, -100, window.screen.width, window.screen.height+100);
 
         // Create an empty group
         planets = game.add.group();
 
         // Ship setup
         // Display the ship at center bottom of screen
-        ship = game.add.sprite(game.world.centerX, game.world.centerY+game.world.centerY/4, 'sprites');
+        ship = game.add.sprite(window.screen.width/2, window.screen.height/2+window.screen.height/8, 'sprites');
         // Set scale of ship
         // ship.scale.setTo(0.2, 0.2);
         // Add physics to the ship
@@ -159,7 +157,7 @@ var mainState = {
         // Net gravitational force
         planets.forEach(function(p) {
           p.body.y += GAME_SPEED;
-          if(p.body.y < -50 || p.body.y > window.screen.height+50) {
+          if(p.body.y <= -100 || p.body.y >= window.screen.height+100) {
             planets.remove(p);
           }
           var speed;
@@ -290,7 +288,7 @@ var menuState = {
     spaceKey.onDown.addOnce(this.start, this);
     this.game.input.onDown.add(this.start, this);
 
-    var display = game.add.image(game.world.centerX, game.world.centerY+game.world.centerY/4, 'ship');
+    var display = game.add.image(window.screen.width/2, window.screen.height/2+window.screen.height/8, 'ship');
     display.anchor.setTo(0.5,0.5);
     display.angle = -90;
   },
