@@ -7,7 +7,7 @@
     version   = "1.0.0">
     <name>Stargazer</name>
     <description>
-        Phaser engined phonegap game.
+        PhaserJS engined phonegap built space simulation game.
     </description>
     <author email="evanyui@hotmail.com" href="evanyui.github.io">
         Evanyui
@@ -23,6 +23,7 @@
     <preference name="orientation" value="portrait" />
     <preference name="fullscreen" value="true" />
     <preference name="exit-on-suspend" value="true" />
+    <preference name="SplashScreenDelay" value="3000"/>
     <plugin name="cordova-plugin-battery-status" source="npm" spec="~1.1.1" />
     <plugin name="cordova-plugin-camera" source="npm" spec="~2.1.1" />
     <plugin name="cordova-plugin-media-capture" source="npm" spec="~1.2.0" />

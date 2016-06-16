@@ -1,8 +1,8 @@
 // Constants
-var TURN_FACTOR = 0.2;
-var BOOST = 200;
-var GAME_SPEED = 2.0;
-var SPAWN = 6500; // Suggest: between 6000-7000
+// var TURN_FACTOR = 0.2;   // NOT USED
+var BOOST = 300;    // Suggest: between 150-300 kid:250 default:270 good:300
+var GAME_SPEED = 4.0; // Suggest: between 2.0-4.0 kid:2.5 default:3.0 good:4.0
+var SPAWN = 4000; // Suggest: between 4000-8000 kid:6000 default:5000 good:4000
 
 // Globals
 var music;
@@ -18,6 +18,7 @@ var score;
 var pauseMsg;
 var target;
 var touchLabel;
+var tutorial;
 
 // Create our 'main' state that will contain the game
 var mainState = {
@@ -81,26 +82,26 @@ var mainState = {
         this.timer = game.time.events.loop(SPAWN, this.createPlanet, this);
 
         // Call the 'boost' function when the spacekey is hit
-        var spaceKey = game.input.keyboard.addKey(
-                        Phaser.Keyboard.SPACEBAR);
+        // var spaceKey = game.input.keyboard.addKey(
+        //                 Phaser.Keyboard.SPACEBAR);
+        // spaceKey.onDown.add(this.boost, this);
+        // spaceKey.onUp.add(this.brake, this);
         cursors = game.input.keyboard.createCursorKeys();
-        spaceKey.onDown.add(this.boost, this);
-        spaceKey.onUp.add(this.brake, this);
         game.input.onDown.add(this.boost, this);
         game.input.onUp.add(this.brake, this);
-
-        // Add sounds
-        // this.jumpSound = game.add.audio('jump');
 
         // Create score label
         score = 0;
         labelScore = game.add.text(window.screen.width/2, 50, "0",
-            { font: "30px Arial", fill: "rgba(255,255,255,1.0)" });
+            { font: "36px Arial", fill: "rgba(255,255,255,0.8)",
+            boundsAlignH:'center', boundsAlignV:'middle' });
         labelScore.anchor.set(0.5);
+        labelScore.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
 
         // Pause Game mechanism
         var pauseLabel = game.add.text( window.screen.width-40, 20, '| |',
-            { font: '20px Arial', fill: 'rgba(255,255,255,0.8)',  });
+            { font: '20px Arial', fill: 'rgba(255,255,255,0.8)',
+            boundsAlignH:'center', boundsAlignV:'middle' });
         pauseLabel.fontWeight = 'bold';
         pauseLabel.inputEnabled = true;
         // pauseLabel.strokeThickness = 4;
@@ -115,12 +116,18 @@ var mainState = {
           pauseMsg.setShadow(0, 4, 'rgba(0,0,0,1.0)', 2);
           pauseMsg.anchor.set(0.5);
 
-          touchLabel = game.add.text(window.screen.width/2,window.screen.height-100,'touch to resume',
+          touchLabel = game.add.text(window.screen.width/2,window.screen.height-100,'touch anywhere to resume',
                                     {font:'20px Verdana', fill:'rgba(255,255,255,0.2)',
                                     boundsAlignH:'center', boundsAlignV:'middle'});
           touchLabel.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
           touchLabel.anchor.set(0.5);
         });
+
+        tutorial = game.add.text( window.screen.width/2, window.screen.height/2,
+            'Touch the screen to thrust forward,\n\t\t\tThe gravity will lead the ship',
+            { font: '16px Arial', fill: 'rgba(255,255,255,0.3)', boundsAlignH:'center', boundsAlignV:'middle' });
+        tutorial.setShadow(0, 2, 'rgba(0,0,0,1.0)', 5);
+        tutorial.anchor.set(0.5);
     },
 
     update: function() {
@@ -174,7 +181,8 @@ var mainState = {
         // Update ship direction to target
         if(planets.length>0) {
           var angle = Math.atan2(target.y - ship.y, target.x - ship.x);
-          game.add.tween(ship.body).to({rotation: angle}, 200).start();
+          // game.add.tween(ship.body).to({rotation: angle}, 50).start();
+          ship.body.rotation = angle;
         }
         // Move ship according to new direction affected by gravity pull
         Math.radians = function(degrees) {
@@ -186,6 +194,7 @@ var mainState = {
 
     // Boost ship
     boost: function() {
+        tutorial.destroy();
         // If game is paused, resume game
         if(game.paused) {
           game.paused = false;
@@ -239,8 +248,9 @@ var mainState = {
 var menuState = {
   preload: function() {
     // Load images
-    game.load.image('ship', 'assets/ship.png');
     game.load.image('back', 'assets/space.png');
+    // Load sprite sheets
+    game.load.spritesheet('sprites', 'assets/sprites.png', 40, 28, 8);
 
     // Load sounds
     game.load.audio('music', ['assets/music.mp3', 'assets/music.ogg']);
@@ -264,33 +274,34 @@ var menuState = {
     this.back = game.add.tileSprite(0, 0, game.width, game.height, 'back');
     var nameLabel = game.add.text(window.screen.width/2,150,'Stargazer',{font:'50px Verdana', fill:'rgba(255,255,255,1.0)',
                               boundsAlignH:'center', boundsAlignV:'middle'});
-    nameLabel.setShadow(0, 5, 'rgba(0,0,0,0.5)', 5);
+    nameLabel.setShadow(0, 10, 'rgba(0,0,0,0.8)', 5);
     nameLabel.anchor.set(0.5);
-    var highScore = game.add.text(window.screen.width/2, window.screen.height-150, "High Score: " + Math.floor(localStorage.getItem('highscore')/100),
-                    { font: "22px Verdana", fill: "rgba(255,255,255,1.0)",
+    var highScore = game.add.text(window.screen.width/2, window.screen.height/2-100, Math.floor(localStorage.getItem('highscore')/100),
+                    { font: "36px Arial", fill: "rgba(255,255,255,0.8)",
                       boundsAlignH:'center', boundsAlignV:'middle' });
-    highScore.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
     highScore.anchor.set(0.5);
+    highScore.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
     var tabLabel = game.add.text(window.screen.width/2,window.screen.height-100,'touch to start',
                               {font:'20px Verdana', fill:'rgba(255,255,255,0.2)',
                               boundsAlignH:'center', boundsAlignV:'middle'});
     tabLabel.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
     tabLabel.anchor.set(0.5);
-    var quoteLabel = game.add.text(window.screen.width/2,window.screen.height/2,"'Mankind was born on Earth. \n\t\t\t\t\tIt was never meant to die here.'\n\t\t\t\t\t\t\t\t\t\t - Interstellar",
-                              {font:'16px Times New Roman', fill:'rgba(255,255,255,0.5)',
-                              boundsAlignH:'center', boundsAlignV:'middle'});
-    quoteLabel.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
-    quoteLabel.anchor.set(0.5);
-
+    // var quoteLabel = game.add.text(window.screen.width/2,window.screen.height/2,"'Mankind was born on Earth. \n\t\t\t\t\tIt was never meant to die here.'\n\t\t\t\t\t\t\t\t\t\t - Interstellar",
+    //                           {font:'16px Times New Roman', fill:'rgba(255,255,255,0.5)',
+    //                           boundsAlignH:'center', boundsAlignV:'middle'});
+    // quoteLabel.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
+    // quoteLabel.anchor.set(0.5);
 
     var spaceKey = game.input.keyboard.addKey(
                     Phaser.Keyboard.SPACEBAR);
     spaceKey.onDown.addOnce(this.start, this);
     this.game.input.onDown.add(this.start, this);
 
-    var display = game.add.image(window.screen.width/2, window.screen.height/2+window.screen.height/8, 'ship');
+    var display = game.add.image(window.screen.width/2, window.screen.height/2+window.screen.height/8, 'sprites');
     display.anchor.setTo(0.5,0.5);
     display.angle = -90;
+    var disAnim = display.animations.add('fly');
+    disAnim.play(null, true);
   },
 
   update: function() {
@@ -330,13 +341,13 @@ var finishState = {
     quote.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
     quote.anchor.set(0.5);
     var currentScore = game.add.text(window.screen.width/2, window.screen.height/2+50, "Current Score: " + Math.floor(score/100),
-                    { font: "22px Verdana", fill: "rgba(255,255,255,1.0)",
+                    { font: "22px Arial", fill: "rgba(255,255,255,1.0)",
                       boundsAlignH:'center', boundsAlignV:'middle' });
     currentScore.fontWeight = 'bold';
     currentScore.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
     currentScore.anchor.set(0.5);
     var highScore = game.add.text(window.screen.width/2, window.screen.height/2+100, "High Score: " + Math.floor(localStorage.getItem('highscore')/100),
-                    { font: "22px Verdana", fill: "rgba(255,255,255,1.0)",
+                    { font: "22px Arial", fill: "rgba(255,255,255,1.0)",
                       boundsAlignH:'center', boundsAlignV:'middle' });
     highScore.setShadow(0, 2, 'rgba(0,0,0,0.5)', 5);
     highScore.anchor.set(0.5);

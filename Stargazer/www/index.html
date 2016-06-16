@@ -15,9 +15,11 @@
         <script type="text/javascript" src="phonegap.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
         <script type="text/javascript">
-            document.addEventListener('deviceready', on_device_ready, false);
-            document.addEventListener('pause', onPause, false);
-            document.addEventListener('resume', onResume, false);
+            window.onload = function () {
+              document.addEventListener('deviceready', on_device_ready, false);
+              document.addEventListener('pause', onPause, false);
+              document.addEventListener('resume', onResume, false);
+            }
             function on_device_ready() {
               app.initialize();
             }
