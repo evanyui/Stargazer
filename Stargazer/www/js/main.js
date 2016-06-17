@@ -1,8 +1,8 @@
 // Constants
 // var TURN_FACTOR = 0.2;   // NOT USED
-var BOOST = 300;    // Suggest: between 150-300 kid:250 default:270 good:300
-var GAME_SPEED = 4.0; // Suggest: between 2.0-4.0 kid:2.5 default:3.0 good:4.0
-var SPAWN = 4000; // Suggest: between 4000-8000 kid:6000 default:5000 good:4000
+var BOOST = 270;    // Suggest: between 150-300 kid:250 default:270 good:300
+var GAME_SPEED = 3.0; // Suggest: between 2.0-4.0 kid:2.5 default:3.0 good:4.0
+var SPAWN = 5000; // Suggest: between 4000-8000 kid:6000 default:5000 good:4000
 
 // Globals
 var music;
